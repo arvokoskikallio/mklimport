@@ -12,24 +12,31 @@ namespace PPImport
 
         static async Task Main(string[] args)
         {
-            List<MarioKartData> marioKartData = new List<MarioKartData>();
-            using (StreamReader r = new StreamReader("C:\\Users\\Arvo Koskikallio\\ppimport\\mkl times.json"))
-            {
-                string json = r.ReadToEnd();
-                marioKartData = Newtonsoft.Json.JsonConvert.DeserializeObject<List<MarioKartData>>(json);
-            }
+            string folderPath = @"C:\Users\Arvo Koskikallio\mklimport\profiles";
 
-            foreach (var data in marioKartData)
+            string[] files = Directory.GetFiles(folderPath);
+            foreach (var file in files)
             {
-                // Map to List<Player> and List<Time>
-                var player = MapPlayer(data);
-                var playerId = await PushPlayer(player);
-                List<Time> times = MapTimes(data);
+                List<MarioKartData> marioKartData = new List<MarioKartData>();
 
-                foreach (var time in times)
+                using (StreamReader r = new StreamReader(file))
                 {
-                    time.PlayerId = playerId;
-                    PushTime(time);
+                    string json = r.ReadToEnd();
+                    marioKartData.Add(Newtonsoft.Json.JsonConvert.DeserializeObject<MarioKartData>(json));
+                }
+
+                foreach (var data in marioKartData)
+                {
+                    // Map to List<Player> and List<Time>
+                    var player = MapPlayer(data);
+                    var playerId = await PushPlayer(player);
+                    List<Time> times = MapTimes(data);
+
+                    foreach (var time in times)
+                    {
+                        time.PlayerId = playerId;
+                        PushTime(time);
+                    }
                 }
             }
         }
