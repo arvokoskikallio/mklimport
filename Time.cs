@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-namespace PPImport
+namespace MKLImport
 {
     public class Time
     {

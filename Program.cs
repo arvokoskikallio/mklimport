@@ -2,10 +2,13 @@
 using System.Data.SqlClient;
 using System.Globalization;
 
-namespace PPImport
+namespace MKLImport
 {
     class Program
     {
+
+        //TODO - import all times for MKL
+        //TODO - edit PP script to add times that are not found in the MKL dumps (this is where you need weird logic)
         private static string[] contents = File.ReadAllText(@"C:\Users\Arvo Koskikallio\ppimport\config.txt").Split("\r\n");
         private static string _connectionString = contents[0];
         private static DateTime minDate = DateTime.Parse("2008-04-09");
