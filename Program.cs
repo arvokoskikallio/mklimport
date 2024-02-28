@@ -44,58 +44,12 @@ namespace MKLImport
             }
         }
 
-        static Country GetCountryByLongName(string fullName)
-        {
-            foreach (CultureInfo ci in CultureInfo.GetCultures(CultureTypes.SpecificCultures))
-            {
-                RegionInfo region = new RegionInfo(ci.Name);
-                if (region.EnglishName == fullName)
-                {
-                    return Enum.Parse<Country>(region.TwoLetterISORegionName);
-                }
-            }
-
-            if(fullName == "UK") {
-                return Country.GB;
-            }
-
-            if(fullName == "USA") {
-                return Country.US;
-            }
-
-            if(fullName == "Ivory Coast") {
-                return Country.CI;
-            }
-
-            if(fullName == "Dominican Rep") {
-                return Country.DO;
-            }
-
-            if(fullName == "UAE") {
-                return Country.AE;
-            }
-
-            if(fullName == "Bosnia") {
-                return Country.BA;
-            }
-
-            if(fullName == "South Korea") {
-                return Country.KR;
-            }
-
-
-            return Country.Unknown;
-        }
-
         static Player MapPlayer(MarioKartData data)
         {
             return new Player
                 {
-                    Name = data.Info.Name,
-                    Country = GetCountryByLongName(data.Info.Country),
-                    Town = data.Info.Town,
-                    OtherInfo = data.Info.OtherInfo.Replace(" (", ""),
-                    PPProofStatus = data.Info.ProofStatus
+                    Name = data.Name,
+                    Country = Enum.Parse<Country>(data.Country.ToUpper())
                 };
         }
 
@@ -143,12 +97,12 @@ namespace MKLImport
             {
                 times.Add(new Time
                 {
-                    Date = DateTime.Parse(timeEntry.Date),
                     Track = Array.IndexOf(tracks.ToArray(), tracks.First(t => t == timeEntry.Track)),
                     Glitch = timeEntry.Glitch,
-                    Flap = timeEntry.Flap,
-                    RunTime = timeEntry.m*60*1000 + timeEntry.s*1000 + timeEntry.ms,
-                    Link = timeEntry.Video
+                    Flap = false,
+                    RunTime = timeEntry.Time,
+                    Link = timeEntry.Video,
+                    Ghost = timeEntry.Ghost
                 });
             }
             return times;
@@ -156,8 +110,8 @@ namespace MKLImport
 
         static async Task<int> PushPlayer(Player player)
         {
-            string sqlQuery = "INSERT INTO Players (Name, Country, Town, OtherInfo, PPProofStatus)" +
-            "VALUES (@Name, @Country, @Town, @OtherInfo, @PPProofStatus); SELECT CAST(SCOPE_IDENTITY() as int)";
+            string sqlQuery = "INSERT INTO Players (Name, Country)" +
+            "VALUES (@Name, @Country); SELECT CAST(SCOPE_IDENTITY() as int)";
 
             using var connection = new SqlConnection(_connectionString);
             return await connection.QuerySingleAsync<int>(sqlQuery, player);
@@ -169,8 +123,8 @@ namespace MKLImport
                 time.Date = null;
             }
 
-            string sqlQuery = "INSERT INTO Times (PlayerId, Date, Track, Glitch, Flap, RunTime, Link, Obsoleted)" +
-            "VALUES (@PlayerId, @Date, @Track, @Glitch, @Flap, @RunTime, @Link, 0)";
+            string sqlQuery = "INSERT INTO Times (PlayerId, Date, Track, Glitch, Flap, RunTime, Link, Ghost, Obsoleted)" +
+            "VALUES (@PlayerId, @Date, @Track, @Glitch, @Flap, @RunTime, @Link, @Ghost, 0)";
 
 
             using var connection = new SqlConnection(_connectionString);
@@ -181,28 +135,17 @@ namespace MKLImport
     public class TimeEntry
     {
         public string Date { get; set; }
-        public string Name { get; set; }
         public string Track { get; set; }
-        public int m { get; set; }
-        public int s { get; set; }
-        public int ms { get; set; }
-        public bool Flap { get; set; }
+        public int Time { get; set; }
         public bool Glitch { get; set; }
         public string Video { get; set; }
-    }
-
-    public class PlayerInfo
-    {
-        public string Name { get; set; }
-        public string Country { get; set; }
-        public string Town { get; set; }
-        public string OtherInfo { get; set; }
-        public string ProofStatus { get; set; }
+        public string Ghost { get; set; }
     }
 
     public class MarioKartData
     {
-        public PlayerInfo Info { get; set; }
+        public string Name { get; set; }
+        public string Country { get; set; }
         public List<TimeEntry> Times { get; set; }
     }
 }
