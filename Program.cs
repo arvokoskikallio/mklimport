@@ -93,7 +93,7 @@ namespace MKLImport
 
             var times = new List<Time>();
 
-            foreach (var timeEntry in data.Times)
+            foreach (var timeEntry in TimeEntryManager.GetDistinctTimes(data.Times))
             {
                 times.Add(new Time
                 {
@@ -140,6 +140,28 @@ namespace MKLImport
         public bool Glitch { get; set; }
         public string Video { get; set; }
         public string Ghost { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+                return false;
+
+            TimeEntry other = (TimeEntry)obj;
+            return Date == other.Date && Track == other.Track && Time == other.Time && Glitch == other.Glitch && Video == other.Video && Ghost == other.Ghost;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Date, Track, Time, Glitch, Video, Ghost);
+        }
+    }
+
+    public class TimeEntryManager
+    {
+        public static List<TimeEntry> GetDistinctTimes(List<TimeEntry> entries)
+        {
+            return entries.Distinct().ToList();
+        }
     }
 
     public class MarioKartData
